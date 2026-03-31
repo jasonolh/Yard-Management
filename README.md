@@ -1,20 +1,24 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Monday.com Integration App
 
-# Run and deploy your AI Studio app
+This application integrates with Monday.com to manage jobs and tyre bay items.
 
-This contains everything you need to run your app locally.
+## Vercel Deployment
 
-View your app in AI Studio: https://ai.studio/apps/a0d5ebd8-3380-4946-95b1-d32cc19d1a0f
+To deploy this application to Vercel, follow these steps:
 
-## Run Locally
+1.  **Export the code**: Export the code from AI Studio and push it to a GitHub repository.
+2.  **Connect to Vercel**: Import the repository into Vercel.
+3.  **Configure Environment Variables**:
+    -   Add `MONDAY_API_KEY` to your Vercel project's environment variables.
+    -   Add any other required environment variables (e.g., Firebase config if used).
+4.  **Build Settings**: Vercel should automatically detect the Vite project.
+    -   Build Command: `npm run build`
+    -   Output Directory: `dist`
+5.  **Deploy**: Vercel will build the frontend and deploy the `api/` directory as serverless functions.
 
-**Prerequisites:**  Node.js
+## Project Structure
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+-   `src/`: Frontend React application.
+-   `server.ts`: Express server handling API requests and serving the app in development/production.
+-   `api/index.ts`: Entry point for Vercel serverless functions.
+-   `vercel.json`: Vercel configuration for routing and SPA support.
