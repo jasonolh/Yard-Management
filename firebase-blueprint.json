@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "FleetVehicle": {
+      "title": "FleetVehicle",
+      "description": "A vehicle in the OneLogix fleet.",
+      "type": "object",
+      "properties": {
+        "registrationNumber": {
+          "type": "string",
+          "description": "The license plate or registration number of the vehicle."
+        },
+        "make": {
+          "type": "string",
+          "description": "The manufacturer of the vehicle."
+        },
+        "model": {
+          "type": "string",
+          "description": "The model of the vehicle."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["Truck", "Trailer", "Van", "Other"],
+          "description": "The type of the vehicle."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "Maintenance", "Out of Service"],
+          "description": "The current operational status of the vehicle."
+        },
+        "driver": {
+          "type": "string",
+          "description": "The currently assigned driver."
+        },
+        "lastInspectionDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date of the last inspection."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the record was created."
+        }
+      },
+      "required": ["registrationNumber", "make", "model", "type", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "fleet/{vehicleId}": {
+      "schema": {
+        "$ref": "#/entities/FleetVehicle"
+      },
+      "description": "Stores the list of all fleet vehicles."
+    }
+  }
+}

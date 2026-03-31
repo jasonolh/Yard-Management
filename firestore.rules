@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: fleet
+    // Document ID: auto-generated
+    // Fields:
+    //   - registrationNumber: string (required, <20 chars)
+    //   - make: string (required, <50 chars)
+    //   - model: string (required, <50 chars)
+    //   - type: string (required, in ['Truck', 'Trailer', 'Van', 'Other'])
+    //   - status: string (required, in ['Active', 'Maintenance', 'Out of Service'])
+    //   - driver: string (optional, <100 chars)
+    //   - lastInspectionDate: string (optional, ISO 8601 date string)
+    //   - createdAt: string (required, ISO 8601 date string, immutable)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !('field' in request.resource.data) ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() >= minLen &&
+              request.resource.data[field].size() <= maxLen);
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string &&
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidFleetVehicle() {
+      return hasOnlyAllowedFields(['registrationNumber', 'make', 'model', 'type', 'status', 'driver', 'lastInspectionDate', 'createdAt']) &&
+             hasRequiredFields(['registrationNumber', 'make', 'model', 'type', 'status', 'createdAt']) &&
+             validStringLength('registrationNumber', 1, 20) &&
+             validStringLength('make', 1, 50) &&
+             validStringLength('model', 1, 50) &&
+             request.resource.data.type in ['Truck', 'Trailer', 'Van', 'Other'] &&
+             request.resource.data.status in ['Active', 'Maintenance', 'Out of Service'] &&
+             (!('driver' in request.resource.data) || validStringLength('driver', 0, 100)) &&
+             (!('lastInspectionDate' in request.resource.data) || isValidDateString(request.resource.data.lastInspectionDate)) &&
+             isValidDateString(request.resource.data.createdAt);
+    }
+
+    match /settings/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    match /fleet/{vehicleId} {
+      // For the prototype, we allow any authenticated user to read and write fleet vehicles.
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidFleetVehicle();
+      allow update: if isAuthenticated() && isValidFleetVehicle() && areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isAuthenticated();
+    }
+  }
+}
